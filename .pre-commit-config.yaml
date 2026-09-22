@@ -1,0 +1,41 @@
+# Shared pre-commit config for the platform portfolio.
+# Source of truth: platform/templates/.pre-commit-config.yaml
+# Copy changes to every repo with: platform/scripts/sync-precommit.sh
+#
+# Local binaries required: terraform, tflint, gitleaks (brew install hashicorp/tap/terraform tflint gitleaks)
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+        args: [--markdown-linebreak-ext=md]
+      - id: end-of-file-fixer
+      - id: check-yaml
+        # Kustomize and Helm files can hold multiple docs and custom tags
+        args: [--allow-multiple-documents]
+        exclude: ^(.*/templates/.*\.ya?ml|.*/charts/.*)$
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        args: [--maxkb=512]
+      - id: detect-private-key
+
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.35.1
+    hooks:
+      - id: yamllint
+        args:
+          - -d
+          - >-
+            {extends: default,
+             rules: {
+               line-length: {max: 160, level: warning},
+               truthy: {allowed-values: ["true", "false", "on", "off"], check-keys: false},
+               document-start: disable,
+               comments: {min-spaces-from-content: 1},
+               indentation: {spaces: 2, indent-sequences: consistent}}}
+        exclude: ^(.*/charts/.*|.*/templates/.*\.ya?ml)$
+
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.21.2
+    hooks:
+      - id: gitleaks
